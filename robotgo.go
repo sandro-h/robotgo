@@ -729,6 +729,11 @@ func UnicodeType(str uint32) {
 	C.unicodeType(cstr)
 }
 
+func KeysymType(sym uint32) {
+	C.toggleKeySym(C.ulong(sym), true, 0)
+	C.toggleKeySym(C.ulong(sym), false, 0)
+}
+
 func toUC(text string) []string {
 	var uc []string
 
@@ -765,10 +770,17 @@ func TypeStr(str string, args ...float64) {
 
 	if runtime.GOOS == "linux" {
 		strUc := toUC(str)
+		// fmt.Println(str)
+		// fmt.Println(strUc)
 		for i := 0; i < len(strUc); i++ {
+			// fmt.Println(strUc[i])
 			ru := []rune(strUc[i])
+			// fmt.Println(ru)
 			if len(ru) <= 1 {
 				ustr := uint32(CharCodeAt(strUc[i], 0))
+				UnicodeType(ustr)
+			} else if strUc[i] == "\\\\" || strUc[i] == "\\\"" {
+				ustr := uint32(CharCodeAt(strUc[i], 1))
 				UnicodeType(ustr)
 			} else {
 				inputUTF(strUc[i])

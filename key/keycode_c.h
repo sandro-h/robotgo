@@ -55,8 +55,8 @@ struct XSpecialCharacterMapping XSpecialCharacterTable[] = {
   	{')', XK_parenright},
   	{' ', XK_space},
   	{'/', XK_slash},
-	{'"', XK_quoteright},
-  	{'\'', XK_quotedbl},
+	{'"', XK_quotedbl},
+  	{'\'', XK_apostrophe},
 	// {'\'', XK_quoteright},
 	{'\\', XK_backslash},
   	{'\t', XK_Tab},
@@ -129,6 +129,7 @@ MMKeyCode keyCodeForChar(const char c){
 		buf[1] = '\0';
 
 		code = XStringToKeysym(buf);
+		printf("XStringToKeysym(%c) = %d\n", c, code);
 		if (code == NoSymbol) {
 			/* Some special keys are apparently not handled properly by
 			* XStringToKeysym() on some systems, so search for them instead in our

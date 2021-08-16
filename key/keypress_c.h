@@ -166,6 +166,7 @@ void toggleKeyCode(MMKeyCode code, const bool down, MMKeyFlags flags){
 	if (flags & MOD_ALT) X_KEY_EVENT_WAIT(display, K_ALT, is_press);
 	if (flags & MOD_CONTROL) X_KEY_EVENT_WAIT(display, K_CONTROL, is_press);
 	if (flags & MOD_SHIFT) X_KEY_EVENT_WAIT(display, K_SHIFT, is_press);
+	if (flags & MOD_GRALT) X_KEY_EVENT_WAIT(display, K_GRALT, is_press);
 
 	X_KEY_EVENT(display, code, is_press);
 #endif
@@ -193,22 +194,120 @@ void tapKeyCode(MMKeyCode code, MMKeyFlags flags){
 	}
 #endif
 
-void toggleKey(char c, const bool down, MMKeyFlags flags){
-	MMKeyCode keyCode = keyCodeForChar(c);
 
+void toggleKeySym(MMKeyCode keyCode, const bool down, MMKeyFlags flags) {
 	//Prevent unused variable warning for Mac and Linux.
 	#if defined(IS_WINDOWS)
 		int modifiers;
 	#endif
 
 	#if defined(USE_X11)
-		if (toUpper(c) && !(flags & MOD_SHIFT)) {
-			flags |= MOD_SHIFT; /* Not sure if this is safe for all layouts. */
+		Display *dpy;
+		dpy = XOpenDisplay(NULL);
+		int realKeyCode = XKeysymToKeycode(dpy, keyCode);
+		// printf("Real keycode for %d: %d\n", keyCode, realKeyCode);
+		int mod = -1;
+
+		// for (uint i = 0; i < 4; i++) {
+		// 	if (XKeycodeToKeysym(dpy, realKeyCode, i) == keyCode) {
+		// 		mod = i;
+		// 		break;
+		// 	}
+		// }
+		// printf("mod for keysim %d: %u\n", keyCode, mod);
+
+		int min, max, numcodes;
+		// XDisplayKeycodes(dpy, &min, &max);
+		KeySym *keysym;
+		// int req = max-min+1;
+		// if (!globalKeysymMap) {
+		// 	KeySym *allsyms = XGetKeyboardMapping(dpy, min, max-min+1, &numcodes);
+		// 	printf("keyCode=%d, realKeyCode=%d\n", keyCode, realKeyCode);
+		// 	for (uint i = 0; i < (max-min+1) * numcodes; i++) {
+		// 		printf("%d -> %d\n", i, allsyms[i]);
+		// 		HASH_ADD_INT( users, id, s );				
+				
+		// 	}
+		// 	// int pos = (realKeyCode - min) * numcodes;
+		// 	// for (uint i = 0; i < numcodes; i++) {
+		// 	// 	// printf("%d -> %d\n", i, keysym[i]);
+		// 	// 	if (mod < 0 && globalKeysymMap[pos + i] == keyCode) {
+		// 	// 		mod = i;
+		// 	// 		break;
+		// 	// 	}			
+		// 	// }
+		// 	// printf("pos=%d, mod=%d, globalKeysymMap[pos + mod]=%d\n", pos, mod, globalKeysymMap[pos + mod]);
+		// 	// // for (uint i = 0; i < (max-min+1) * numcodes; i++) {
+		// 	// 	printf("%d -> %d\n", i, globalKeysymMap[i]);
+		// 	// }
+		// }
+		
+		int req = 1;
+		keysym = XGetKeyboardMapping(dpy, realKeyCode, req, &numcodes);
+		// printf("min=%d, max=%d, numcodes=%d\n", min, max, numcodes);
+		for (uint i = 0; i < req * numcodes; i++) {
+			// printf("%d -> %d\n", i, keysym[i]);
+			if (mod < 0 && keysym[i] == keyCode) {
+				mod = i;
+				break;
+			}			
 		}
-	#else
-		if (isupper(c) && !(flags & MOD_SHIFT)) {
-			flags |= MOD_SHIFT; /* Not sure if this is safe for all layouts. */
+		XFree(keysym);
+		printf("keysim=%d, keycode=%d, mod=%d\n", keyCode, realKeyCode, mod);
+		// TODO: how to figure out mod->key mapping
+		if (mod == 1) {
+			flags |= MOD_SHIFT;
 		}
+		else if (mod == 2) {
+			flags |= MOD_GRALT;
+		}
+		else if (mod == 3) {
+			flags |= MOD_GRALT;
+		}
+		else if (mod == 4) {
+			flags |= MOD_GRALT;
+		}
+
+		// XModifierKeymap *modifiers = XGetModifierMapping(dpy);
+		// KeyCode *kp = modifiers->modifiermap;    
+
+		// KeyCode modifierTable[8];
+		// for (uint modifier_index = 0; modifier_index < 8; modifier_index++)
+		// 	{
+		// 	modifierTable[modifier_index] = 0;
+		// 	for (uint modifier_key = 0; 
+		// 	modifier_key < modifiers->max_keypermod; 
+		// 	modifier_key++)
+		// 	{
+		// 	int kc = kp[modifier_index * modifiers->max_keypermod + modifier_key]; 
+		// 	if (kc)
+		// 		{
+		// 			printf("modindex %d -> key %d\n", modifier_index, kc);
+		// 		modifierTable[modifier_index] = kc;
+		// 		break;
+		// 		}
+		// 	}
+		// 	}
+ 		// XFreeModifiermap(modifiers);
+		//  printf("altgr %d\n", K_GRALT);
+
+		// printf("display: %p\n", dpy);
+		// for (int i = 0; i < 255; i++) {
+		// 	unsigned int mods = XkbKeysymToModifiers(dpy, i);
+		// 	printf("mods for keycode %d: %u\n", i, mods);
+		// }
+		
+		XCloseDisplay(dpy);
+		// printf("mods for keycode %d: %u\n", keyCode, mods);
+
+
+	// 	if (toUpper(c) && !(flags & MOD_SHIFT)) {
+	// 		flags |= MOD_SHIFT; /* Not sure if this is safe for all layouts. */
+	// 	}
+	// #else
+	// 	if (isupper(c) && !(flags & MOD_SHIFT)) {
+	// 		flags |= MOD_SHIFT; /* Not sure if this is safe for all layouts. */
+	// 	}
 	#endif
 
 	#if defined(IS_WINDOWS)
@@ -219,8 +318,17 @@ void toggleKey(char c, const bool down, MMKeyFlags flags){
 		keyCode = keyCode & 0xff; // Mask out modifiers.
 	#endif
 
+
+	// printf("keyCode=%d, flags=%d\n", keyCode, flags);
+
 	toggleKeyCode(keyCode, down, flags);
 }
+
+void toggleKey(char c, const bool down, MMKeyFlags flags){
+	MMKeyCode keyCode = keyCodeForChar(c);
+	toggleKeySym(keyCode, down, flags);
+}
+
 
 void tapKey(char c, MMKeyFlags flags){
 	toggleKey(c, true, flags);
