@@ -723,6 +723,14 @@ func CharCodeAt(s string, n int) rune {
 	return 0
 }
 
+func StartMultiToggleKey() {
+	C.startMultiToggleKey()
+}
+
+func EndMultiToggleKey() {
+	C.endMultiToggleKey()
+}
+
 // UnicodeType tap uint32 unicode
 func UnicodeType(str uint32) {
 	cstr := C.uint(str)
@@ -770,12 +778,8 @@ func TypeStr(str string, args ...float64) {
 
 	if runtime.GOOS == "linux" {
 		strUc := toUC(str)
-		// fmt.Println(str)
-		// fmt.Println(strUc)
 		for i := 0; i < len(strUc); i++ {
-			// fmt.Println(strUc[i])
 			ru := []rune(strUc[i])
-			// fmt.Println(ru)
 			if len(ru) <= 1 {
 				ustr := uint32(CharCodeAt(strUc[i], 0))
 				UnicodeType(ustr)

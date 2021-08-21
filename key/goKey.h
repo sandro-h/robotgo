@@ -68,7 +68,7 @@ struct KeyNames{
 	{ "alt",            K_ALT },
 	{ "lalt",           K_LALT },
 	{ "ralt",           K_RALT },
-{ "gralt", K_GRALT },
+	{ "gralt", 			K_GRALT },
 	{ "ctrl",           K_CONTROL },
 	{ "lctrl",          K_LCONTROL },
 	{ "rctrl",          K_RCONTROL },
