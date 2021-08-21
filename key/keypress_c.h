@@ -195,33 +195,31 @@ void tapKeyCode(MMKeyCode code, MMKeyFlags flags){
 #endif
 
 
-void toggleKeySym(MMKeyCode keyCode, const bool down, MMKeyFlags flags) {
+void toggleKeySym(uint keyCode, const bool down, MMKeyFlags flags) {
 	//Prevent unused variable warning for Mac and Linux.
 	#if defined(IS_WINDOWS)
 		int modifiers;
 	#endif
 
 	#if defined(USE_X11)
-		Display *dpy;
-		dpy = XOpenDisplay(NULL);
-		int realKeyCode = XKeysymToKeycode(dpy, keyCode);
+		Display *dpy = g_dpy ? g_dpy : XOpenDisplay(NULL);
+		
+		// Actually a keySym in the X11 context:
+		int keySym = keyCode;
+		int realKeyCode = XKeysymToKeycode(dpy, keySym);
+
+		int numcodes;
+		KeySym *codeToSym = XGetKeyboardMapping(dpy, realKeyCode, 1, &numcodes);
 
 		int mod = -1;
-
-		int min, max, numcodes;
-
-		KeySym *keysym;
-	
-		int req = 1;
-		keysym = XGetKeyboardMapping(dpy, realKeyCode, req, &numcodes);
-
-		for (uint i = 0; i < req * numcodes; i++) {
-			if (mod < 0 && keysym[i] == keyCode) {
+		for (uint i = 0; i < numcodes; i++) {
+			if (mod < 0 && codeToSym[i] == keySym) {
 				mod = i;
 				break;
 			}			
 		}
-		XFree(keysym);
+
+		XFree(codeToSym);
 
 		switch (mod) {
 		case 1:
@@ -234,7 +232,9 @@ void toggleKeySym(MMKeyCode keyCode, const bool down, MMKeyFlags flags) {
 			break;
 		}
 		
-		XCloseDisplay(dpy);
+		if (!g_dpy) {
+			XCloseDisplay(dpy);
+		}		
 	#endif
 
 	#if defined(IS_WINDOWS)
@@ -387,4 +387,17 @@ void typeStringDelayed(const char *str, const unsigned cpm){
 			microsleep(mspc + (DEADBEEF_UNIFORM(0.0, 0.5)));
 		}
 	}
+}
+
+void startMultiToggleKey() {
+#if defined(USE_X11)
+	g_dpy = XOpenDisplay(NULL);
+#endif
+}
+
+void endMultiToggleKey() {
+#if defined(USE_X11)
+	XCloseDisplay(g_dpy);
+	g_dpy = NULL;
+#endif
 }

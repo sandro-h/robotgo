@@ -11,11 +11,6 @@
 	#include <stdbool.h>
 #endif
 
-
-// #if defined(USE_X11)
-// #include "uthash.h"
-// #endif
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -44,14 +39,7 @@ extern "C"
 
 	typedef unsigned int MMKeyFlags;
 
-
-	// struct KeySymEntry {
-	// 	int keysym;            /* we'll use this field as the key */
-	// 	int keycode;
-	// 	UT_hash_handle hh; /* makes this structure hashable */
-	// };
-
-	// struct KeySymEntry *globalKeysymMap = NULL;
+	Display *g_dpy;
 
 #elif defined(IS_WINDOWS)
 
@@ -73,11 +61,13 @@ extern "C"
 void win32KeyEvent(int key, MMKeyFlags flags);
 #endif
 
-void toggleKeySym(MMKeyCode keyCode, const bool down, MMKeyFlags flags);
+void startMultiToggleKey();
+void endMultiToggleKey();
+
+void toggleKeySym(uint keyCode, const bool down, MMKeyFlags flags);
 
 /* Toggles the given key down or up. */
 void toggleKeyCode(MMKeyCode code, const bool down, MMKeyFlags flags);
-
 
 /* Toggles the key down and then up. */
 void tapKeyCode(MMKeyCode code, MMKeyFlags flags);
